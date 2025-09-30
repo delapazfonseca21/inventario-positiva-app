@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { InventoryHistory } from "@/components/inventory/InventoryHistory";
@@ -6,58 +6,10 @@ import { CategorySection } from "@/components/inventory/CategorySection";
 import { AddEditItemModal } from "@/components/inventory/AddEditItemModal";
 import { InventoryItemData } from "@/components/inventory/InventoryItem";
 import { Package, Wrench, Palette, Hammer } from "lucide-react";
-
-// Mock data - In real app, this would come from PocketBase
-const mockItems: InventoryItemData[] = [
-  {
-    id: '1',
-    name: 'Martillo Stanley',
-    description: 'Martillo de carpintero con mango de madera, peso 16 oz',
-    quantity: 8,
-    unit: 'unidades',
-    category: 'herramientas',
-    minStock: 3
-  },
-  {
-    id: '2',
-    name: 'Pintura Blanca Interior',
-    description: 'Pintura látex para interiores, acabado mate, alta cobertura',
-    quantity: 12,
-    unit: 'galones',
-    category: 'pinturas',
-    minStock: 5
-  },
-  {
-    id: '3',
-    name: 'Cemento Portland',
-    description: 'Cemento gris tipo I, ideal para construcción general',
-    quantity: 25,
-    unit: 'bultos',
-    category: 'materiales',
-    minStock: 10
-  },
-  {
-    id: '4',
-    name: 'Taladro Eléctrico',
-    description: 'Taladro percutor 800W con set de brocas incluidas',
-    quantity: 3,
-    unit: 'unidades',
-    category: 'herramientas',
-    minStock: 2
-  },
-  {
-    id: '5',
-    name: 'Pintura Azul Exterior',
-    description: 'Esmalte para exteriores resistente a la intemperie',
-    quantity: 7,
-    unit: 'galones',
-    category: 'pinturas',
-    minStock: 3
-  },
-];
+import { useInventario } from "@/hooks/usePocketBase";
 
 export default function Dashboard() {
-  const [items, setItems] = useState<InventoryItemData[]>(mockItems);
+  const { items, isLoading, createItem, updateItem } = useInventario();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItemData | undefined>();
   const [defaultCategory, setDefaultCategory] = useState<string>('');
@@ -74,34 +26,69 @@ export default function Dashboard() {
     setIsModalOpen(true);
   };
 
-  const handleSaveItem = (itemData: Omit<InventoryItemData, 'id'>) => {
-    if (editingItem) {
-      // Update existing item
-      setItems(prev => prev.map(item => 
-        item.id === editingItem.id 
-          ? { ...itemData, id: editingItem.id }
-          : item
-      ));
-    } else {
-      // Add new item
-      const newItem: InventoryItemData = {
-        ...itemData,
-        id: Date.now().toString()
-      };
-      setItems(prev => [...prev, newItem]);
+  const handleSaveItem = async (itemData: Omit<InventoryItemData, 'id'>) => {
+    try {
+      if (editingItem) {
+        // Actualizar item existente
+        await updateItem(editingItem.id, {
+          nombre: itemData.name,
+          descripcion: itemData.description,
+          cantidad: itemData.quantity,
+          unidad: itemData.unit,
+          categoria: itemData.category,
+          minStock: itemData.minStock,
+          imagen: itemData.image,
+        });
+      } else {
+        // Crear nuevo item
+        await createItem({
+          nombre: itemData.name,
+          descripcion: itemData.description,
+          cantidad: itemData.quantity,
+          unidad: itemData.unit,
+          categoria: itemData.category,
+          minStock: itemData.minStock,
+          imagen: itemData.image,
+        });
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error saving item:', error);
     }
-    setIsModalOpen(false);
   };
+
+  // Mapear datos de PocketBase al formato del componente
+  const mappedItems: InventoryItemData[] = items.map(item => ({
+    id: item.id,
+    name: item.nombre,
+    description: item.descripcion || '',
+    quantity: item.cantidad,
+    unit: item.unidad,
+    category: item.categoria as 'herramientas' | 'pinturas' | 'materiales',
+    minStock: item.minStock,
+    image: item.imagen,
+  }));
 
   const getItemsByCategory = (category: 'herramientas' | 'pinturas' | 'materiales') => {
-    return items.filter(item => item.category === category);
+    return mappedItems.filter(item => item.category === category);
   };
 
-  const getTotalItems = () => items.length;
-  const getTotalQuantity = () => items.reduce((sum, item) => sum + item.quantity, 0);
-  const getLowStockItems = () => items.filter(item => 
+  const getTotalItems = () => mappedItems.length;
+  const getTotalQuantity = () => mappedItems.reduce((sum, item) => sum + item.quantity, 0);
+  const getLowStockItems = () => mappedItems.filter(item => 
     item.minStock && item.quantity <= item.minStock
   ).length;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando inventario...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

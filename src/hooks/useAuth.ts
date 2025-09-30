@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react';
+import { pb, Empleado } from '@/lib/pocketbase';
 
 export interface User {
   id: string;
@@ -29,37 +30,49 @@ export const useAuthProvider = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem('positivaUser');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        localStorage.removeItem('positivaUser');
-      }
+    // Verificar si hay una sesión activa en PocketBase
+    if (pb.authStore.isValid && pb.authStore.model) {
+      const authModel = pb.authStore.model as any;
+      setUser({
+        id: authModel.id,
+        email: authModel.email,
+        name: authModel.name,
+        createdAt: authModel.created,
+      });
     }
     setIsLoading(false);
+
+    // Listener para cambios en la autenticación
+    pb.authStore.onChange(() => {
+      if (pb.authStore.model) {
+        const authModel = pb.authStore.model as any;
+        setUser({
+          id: authModel.id,
+          email: authModel.email,
+          name: authModel.name,
+          createdAt: authModel.created,
+        });
+      } else {
+        setUser(null);
+      }
+    });
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
     try {
-      // Simulate API call to PocketBase
-      // In real implementation, this would call your PocketBase backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Autenticar con PocketBase usando la colección 'empleados'
+      const authData = await pb.collection('empleados').authWithPassword(email, password);
       
-      // Mock successful login
-      if (email && password) {
-        const mockUser: User = {
-          id: '1',
-          email,
-          name: email.split('@')[0],
-          createdAt: new Date().toISOString(),
-        };
-        
-        setUser(mockUser);
-        localStorage.setItem('positivaUser', JSON.stringify(mockUser));
+      if (authData?.record) {
+        const empleado = authData.record as any;
+        setUser({
+          id: empleado.id,
+          email: empleado.email,
+          name: empleado.name,
+          createdAt: empleado.created,
+        });
         setIsLoading(false);
         return true;
       }
@@ -67,14 +80,15 @@ export const useAuthProvider = () => {
       setIsLoading(false);
       return false;
     } catch (error) {
+      console.error('Error en login:', error);
       setIsLoading(false);
       return false;
     }
   };
 
   const logout = () => {
+    pb.authStore.clear();
     setUser(null);
-    localStorage.removeItem('positivaUser');
   };
 
   return {

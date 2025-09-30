@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TrendingUp, TrendingDown, Clock, User } from "lucide-react";
+import { useStockHistory } from "@/hooks/usePocketBase";
 
 interface HistoryItem {
   id: string;
@@ -13,47 +14,9 @@ interface HistoryItem {
   timestamp: string;
 }
 
-// Mock data - In real app, this would come from PocketBase
-const mockHistory: HistoryItem[] = [
-  {
-    id: '1',
-    user: 'Ana García',
-    action: 'entrada',
-    item: 'Martillo Stanley',
-    quantity: 5,
-    unit: 'unidades',
-    timestamp: '2024-09-28T10:30:00Z'
-  },
-  {
-    id: '2',
-    user: 'Carlos López',
-    action: 'salida',
-    item: 'Pintura Blanca Interior',
-    quantity: 2,
-    unit: 'galones',
-    timestamp: '2024-09-28T09:15:00Z'
-  },
-  {
-    id: '3',
-    user: 'María Rodriguez',
-    action: 'entrada',
-    item: 'Cemento Portland',
-    quantity: 10,
-    unit: 'bultos',
-    timestamp: '2024-09-27T16:45:00Z'
-  },
-  {
-    id: '4',
-    user: 'Juan Pérez',
-    action: 'salida',
-    item: 'Taladro Eléctrico',
-    quantity: 1,
-    unit: 'unidad',
-    timestamp: '2024-09-27T14:20:00Z'
-  },
-];
-
 export const InventoryHistory = () => {
+  const { history, isLoading } = useStockHistory();
+
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleString('es-ES', {
@@ -65,6 +28,17 @@ export const InventoryHistory = () => {
     });
   };
 
+  // Mapear datos de PocketBase al formato del componente
+  const mappedHistory: HistoryItem[] = history.map((item: any) => ({
+    id: item.id,
+    user: item.expand?.empleado?.name || 'Usuario desconocido',
+    action: item.accion,
+    item: item.expand?.inventario?.nombre || 'Item desconocido',
+    quantity: item.cantidad,
+    unit: item.unidad,
+    timestamp: item.created,
+  }));
+
   return (
     <Card className="shadow-card">
       <CardHeader>
@@ -74,9 +48,18 @@ export const InventoryHistory = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-64 w-full">
-          <div className="space-y-3">
-            {mockHistory.map((item) => (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : mappedHistory.length === 0 ? (
+          <div className="flex items-center justify-center h-64 text-muted-foreground">
+            No hay movimientos registrados
+          </div>
+        ) : (
+          <ScrollArea className="h-64 w-full">
+            <div className="space-y-3">
+              {mappedHistory.map((item) => (
               <div 
                 key={item.id}
                 className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
@@ -122,6 +105,7 @@ export const InventoryHistory = () => {
             ))}
           </div>
         </ScrollArea>
+        )}
       </CardContent>
     </Card>
   );
