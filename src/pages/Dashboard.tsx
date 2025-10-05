@@ -8,6 +8,21 @@ import { InventoryItemData } from "@/components/inventory/InventoryItem";
 import { Package, Wrench, Palette, Hammer } from "lucide-react";
 import { useInventario } from "@/hooks/usePocketBase";
 
+const CATEGORY_MAP = {
+  '0tunjeqdefikify': 'herramientas',
+  '499sjxbj3vug46v': 'pinturas',
+  '1a9ao533l6oqz8i': 'materiales',
+};
+
+const NAME_TO_ID_MAP = {
+  'herramientas': '0tunjeqdefikify',
+  'pinturas': '499sjxbj3vug46v',
+  'materiales': '1a9ao533l6oqz8i',
+} as const;
+
+type CategoryMapKeys = keyof typeof CATEGORY_MAP;
+type CategoryMapValues = typeof CATEGORY_MAP[CategoryMapKeys];
+
 export default function Dashboard() {
   const { items, isLoading, createItem, updateItem } = useInventario();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,10 +46,10 @@ export default function Dashboard() {
       if (editingItem) {
         // Actualizar item existente
         await updateItem(editingItem.id, {
-          nombre: itemData.name,
-          descripcion: itemData.description,
-          cantidad: itemData.quantity,
-          unidad: itemData.unit,
+          name: itemData.name,
+          description: itemData.description,
+          quantity: itemData.quantity,
+          unit: itemData.unit,
           categoria: itemData.category,
           minStock: itemData.minStock,
           imagen: itemData.image,
@@ -42,10 +57,10 @@ export default function Dashboard() {
       } else {
         // Crear nuevo item
         await createItem({
-          nombre: itemData.name,
-          descripcion: itemData.description,
-          cantidad: itemData.quantity,
-          unidad: itemData.unit,
+          name: itemData.name,
+          description: itemData.description,
+          quantity: itemData.quantity,
+          unit: itemData.unit,
           categoria: itemData.category,
           minStock: itemData.minStock,
           imagen: itemData.image,
@@ -60,14 +75,14 @@ export default function Dashboard() {
   // Mapear datos de PocketBase al formato del componente
   const mappedItems: InventoryItemData[] = items.map(item => ({
     id: item.id,
-    name: item.nombre,
-    description: item.descripcion || '',
-    quantity: item.cantidad,
-    unit: item.unidad,
-    category: item.categoria as 'herramientas' | 'pinturas' | 'materiales',
+    name: item.name,
+    description: item.description || '',
+    quantity: item.quantity,
+    unit: item.unit,
+    category: CATEGORY_MAP[item.categoria as CategoryMapKeys],
     minStock: item.minStock,
     image: item.imagen,
-  }));
+  })) as InventoryItemData[];
 
   const getItemsByCategory = (category: 'herramientas' | 'pinturas' | 'materiales') => {
     return mappedItems.filter(item => item.category === category);
@@ -148,21 +163,21 @@ export default function Dashboard() {
 
           <div className="space-y-6">
             <CategorySection
-              category="herramientas"
+              category={NAME_TO_ID_MAP.herramientas}
               items={getItemsByCategory('herramientas')}
               onAddItem={handleAddItem}
               onEditItem={handleEditItem}
             />
             
             <CategorySection
-              category="pinturas"
+              category={NAME_TO_ID_MAP.pinturas}
               items={getItemsByCategory('pinturas')}
               onAddItem={handleAddItem}
               onEditItem={handleEditItem}
             />
             
             <CategorySection
-              category="materiales"
+              category={NAME_TO_ID_MAP.materiales}
               items={getItemsByCategory('materiales')}
               onAddItem={handleAddItem}
               onEditItem={handleEditItem}

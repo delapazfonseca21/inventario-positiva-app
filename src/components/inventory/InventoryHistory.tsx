@@ -31,7 +31,7 @@ export const InventoryHistory = () => {
   // Mapear datos de PocketBase al formato del componente
   const mappedHistory: HistoryItem[] = history.map((item: any) => ({
     id: item.id,
-    user: item.expand?.empleado?.name || 'Usuario desconocido',
+    user: item.expand?.empleados?.name || 'Usuario desconocido',
     action: item.accion,
     item: item.expand?.inventario?.nombre || 'Item desconocido',
     quantity: item.cantidad,

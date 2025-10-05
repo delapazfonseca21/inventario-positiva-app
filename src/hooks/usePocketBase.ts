@@ -14,6 +14,8 @@ export const useInventario = () => {
         sort: '-created',
         expand: 'categoria',
       });
+      //ojito acá
+      console.log(records)
       setItems(records);
     } catch (error) {
       console.error('Error fetching inventario:', error);
@@ -109,8 +111,6 @@ export const useStockHistory = () => {
     try {
       setIsLoading(true);
       const records = await pb.collection('stock_history').getFullList<StockHistory>({
-        sort: '-created',
-        expand: 'empleado,inventario',
       });
       setHistory(records);
     } catch (error) {

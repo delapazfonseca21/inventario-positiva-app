@@ -59,9 +59,6 @@ Puedes crear un usuario de dos formas:
 3. Ingresa email, password y name
 4. Guarda el registro
 
-### 2. Desde la aplicación:
-Si implementas un registro de usuarios en la app, los usuarios podrán registrarse directamente.
-
 ## Conectar la aplicación
 
 La aplicación está configurada para conectarse automáticamente a:

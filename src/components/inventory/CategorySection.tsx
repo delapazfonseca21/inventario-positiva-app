@@ -5,7 +5,7 @@ import { InventoryItem, InventoryItemData } from "./InventoryItem";
 import { Plus, Wrench, Palette, Hammer } from "lucide-react";
 
 interface CategorySectionProps {
-  category: 'herramientas' | 'pinturas' | 'materiales';
+  category: '0tunjeqdefikify' | '499sjxbj3vug46v' | '1a9ao533l6oqz8i'; //1-herraminetas 2-pinturas 3-materiales
   items: InventoryItemData[];
   onAddItem: (category: string) => void;
   onEditItem: (item: InventoryItemData) => void;
@@ -19,7 +19,7 @@ export const CategorySection = ({
 }: CategorySectionProps) => {
   const getCategoryInfo = () => {
     switch (category) {
-      case 'herramientas':
+      case '0tunjeqdefikify':
         return {
           title: 'Herramientas',
           icon: Wrench,
@@ -27,7 +27,7 @@ export const CategorySection = ({
           bgColor: 'bg-tools/10',
           borderColor: 'border-tools/20'
         };
-      case 'pinturas':
+      case '499sjxbj3vug46v':
         return {
           title: 'Pinturas',
           icon: Palette,
@@ -35,7 +35,7 @@ export const CategorySection = ({
           bgColor: 'bg-paints/10',
           borderColor: 'border-paints/20'
         };
-      case 'materiales':
+      case '1a9ao533l6oqz8i':
         return {
           title: 'Materiales de Construcción',
           icon: Hammer,
@@ -85,15 +85,22 @@ export const CategorySection = ({
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {items.map((item) => (
+          // CÓDIGO CORREGIDO PARA DEPURACIÓN
+        <div className="space-y-3">
+          {items.map((item) => { // 👈 Abre con llave { y usa 'return'
+            
+            // 💥 AQUÍ PUEDES COLOCAR EL CONSOLE.LOG 💥
+            console.log("Nombre para renderizar:", item.name, "ID:", item.id);
+            
+            return ( // 👈 Debes incluir 'return'
               <InventoryItem
                 key={item.id}
                 item={item}
                 onEdit={onEditItem}
               />
-            ))}
-          </div>
+            );
+          })}  
+        </div>
         )}
       </CardContent>
     </Card>

@@ -4,10 +4,8 @@ import PocketBase from 'pocketbase';
 // Por defecto PocketBase corre en http://127.0.0.1:8090
 export const pb = new PocketBase('http://127.0.0.1:8090');
 
-// Deshabilitar autoCancellation para evitar problemas con requests simultáneos
 pb.autoCancellation(false);
 
-// TypeScript types para tus colecciones
 export interface Empleado {
   id: string;
   email: string;
@@ -27,10 +25,10 @@ export interface Categoria {
 
 export interface Inventario {
   id: string;
-  nombre: string;
-  descripcion?: string;
-  cantidad: number;
-  unidad: string;
+  name: string;
+  description?: string;
+  quantity: number;
+  unit: string;
   categoria: string; // ID de la categoría
   minStock?: number;
   imagen?: string;
