@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TrendingUp, TrendingDown, Clock, User } from "lucide-react";
 import { useStockHistory } from "@/hooks/usePocketBase";
+import { StockHistoryExpanded } from "../../lib/pocketbase"
 
 interface HistoryItem {
   id: string;
@@ -16,7 +17,7 @@ interface HistoryItem {
 
 export const InventoryHistory = () => {
   const { history, isLoading } = useStockHistory();
-
+  console.log('Datos Crudos del Historial:', history);
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleString('es-ES', {
@@ -29,14 +30,14 @@ export const InventoryHistory = () => {
   };
 
   // Mapear datos de PocketBase al formato del componente
-  const mappedHistory: HistoryItem[] = history.map((item: any) => ({
+  const mappedHistory: HistoryItem[] = history.map((item: StockHistoryExpanded) => ({
     id: item.id,
-    user: item.expand?.empleados?.name || 'Usuario desconocido',
+    user: item.expand?.user?.name || 'Usuario desconocido',
     action: item.accion,
-    item: item.expand?.inventario?.nombre || 'Item desconocido',
+    item: item.expand?.item?.name || 'Item desconocido',
     quantity: item.cantidad,
     unit: item.unidad,
-    timestamp: item.created,
+    timestamp: item.timestamp,
   }));
 
   return (
