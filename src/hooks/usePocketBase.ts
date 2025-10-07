@@ -111,8 +111,19 @@ export const useStockHistory = () => {
     try {
       setIsLoading(true);
       const records = await pb.collection('stock_history').getFullList<StockHistory>({
+        expand: 'item,user'
       });
-      setHistory(records);
+
+      const sortedRecords = records.sort((a, b) => {
+        // Usamos item.timestamp, que es el campo de fecha de PocketBase.
+        const dateA = new Date(a.timestamp).getTime();
+        const dateB = new Date(b.timestamp).getTime();
+        // Restar B - A ordena del más reciente al más antiguo (descendente)
+        return dateB - dateA;
+      });
+        
+      setHistory(sortedRecords); 
+      
     } catch (error) {
       console.error('Error fetching stock history:', error);
       toast({

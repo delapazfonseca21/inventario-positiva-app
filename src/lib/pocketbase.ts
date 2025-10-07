@@ -38,11 +38,23 @@ export interface Inventario {
 
 export interface StockHistory {
   id: string;
-  empleado: string; // ID del empleado
+  user: string;       
+  item: string;
   accion: 'entrada' | 'salida';
-  inventario: string; // ID del item de inventario
   cantidad: number;
   unidad: string;
+  timestamp: string;  
   created: string;
   updated: string;
+  expand?: {
+    user: { name: string; email: string; /* ... otros campos de empleado */ };
+    item: { name: string; unit: string; /* ... otros campos de inventario */ };
+  }
+}
+
+export interface StockHistoryExpanded extends StockHistory {
+  expand: {
+    user: Empleado; 
+    item: Inventario; 
+  };
 }
