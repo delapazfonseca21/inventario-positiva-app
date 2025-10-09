@@ -43,28 +43,30 @@ export default function Dashboard() {
 
   const handleSaveItem = async (itemData: Omit<InventoryItemData, 'id'>) => {
     try {
+      const categoryId = NAME_TO_ID_MAP[itemData.category as keyof typeof NAME_TO_ID_MAP];
+
+      if (!categoryId) {
+        console.error("Invalid category name:", itemData.category);
+        // Aquí podrías añadir un toast de error para el usuario
+        return;
+      }
+
+      const dataToSend = {
+        name: itemData.name,
+        description: itemData.description,
+        quantity: itemData.quantity,
+        unit: itemData.unit,
+        categoria: categoryId, // Usar el ID traducido
+        minStock: itemData.minStock,
+        imagen: itemData.image,
+      };
+
       if (editingItem) {
         // Actualizar item existente
-        await updateItem(editingItem.id, {
-          name: itemData.name,
-          description: itemData.description,
-          quantity: itemData.quantity,
-          unit: itemData.unit,
-          categoria: itemData.category,
-          minStock: itemData.minStock,
-          imagen: itemData.image,
-        });
+        await updateItem(editingItem.id, dataToSend);
       } else {
         // Crear nuevo item
-        await createItem({
-          name: itemData.name,
-          description: itemData.description,
-          quantity: itemData.quantity,
-          unit: itemData.unit,
-          categoria: itemData.category,
-          minStock: itemData.minStock,
-          imagen: itemData.image,
-        });
+        await createItem(dataToSend);
       }
       setIsModalOpen(false);
     } catch (error) {
