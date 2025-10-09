@@ -63,7 +63,7 @@ export const CategorySection = ({
             variant="outline"
             size="sm"
             onClick={() => onAddItem(category)}
-            className={`border-${categoryInfo.color}/30 text-${categoryInfo.color} hover:bg-${categoryInfo.color}/10`}
+            className={`border-${categoryInfo.color}/30 text-${categoryInfo.color} hover:bg-${categoryInfo.color}/10 hover:text-${categoryInfo.color}`}
           >
             <Plus className="h-4 w-4 mr-1" />
             Agregar
@@ -78,7 +78,7 @@ export const CategorySection = ({
             <p>No hay elementos en esta categoría</p>
             <Button 
               variant="ghost" 
-              className="mt-2"
+              className={`mt-2 text-${categoryInfo.color} hover:bg-${categoryInfo.color}/10 hover:text-${categoryInfo.color}`}
               onClick={() => onAddItem(category)}
             >
               Agregar el primero

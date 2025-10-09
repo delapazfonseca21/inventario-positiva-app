@@ -49,14 +49,14 @@ export const DashboardHeader = () => {
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="flex items-center space-x-2 hover:bg-primary-light/20"
+                className="flex items-center space-x-2 hover:bg-primary-light/20 hover:text-foreground"
               >
                 <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
                   <User className="h-4 w-4 text-white" />
                 </div>
                 <div className="text-left hidden sm:block">
                   <p className="text-sm font-medium">{user?.name}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground hover:text-muted-foreground">{user?.email}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -81,7 +81,7 @@ export const DashboardHeader = () => {
             onClick={logout}
             variant="outline" 
             size="sm"
-            className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+            className="text-destructive border-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Salir</span>

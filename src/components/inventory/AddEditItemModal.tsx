@@ -54,7 +54,7 @@ export const AddEditItemModal = ({
         description: '',
         quantity: 0,
         unit: '',
-        category: (defaultCategory as any) || 'herramientas',
+        category: (defaultCategory as 'herramientas' | 'pinturas' | 'materiales') || 'herramientas',
         image: '',
         minStock: 0
       });
@@ -207,7 +207,7 @@ export const AddEditItemModal = ({
             <Label htmlFor="category">Categoría *</Label>
             <Select 
               value={formData.category} 
-              onValueChange={(value: any) => setFormData(prev => ({ ...prev, category: value }))}
+              onValueChange={(value: 'herramientas' | 'pinturas' | 'materiales') => setFormData(prev => ({ ...prev, category: value }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar categoría" />
@@ -235,7 +235,7 @@ export const AddEditItemModal = ({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="unit">Unidad *</Label>
+              <Label htmlFor="unit">Unidad de medida *</Label>
               <Input
                 id="unit"
                 value={formData.unit}
