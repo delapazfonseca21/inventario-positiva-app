@@ -40,9 +40,9 @@ export interface StockHistory {
   id: string;
   user: string;       
   item: string;
-  accion: 'entrada' | 'salida';
-  cantidad: number;
-  unidad: string;
+  action: 'entrada' | 'salida';
+  quantityChange: number;
+  unit: string;
   timestamp: string;  
   created: string;
   updated: string;

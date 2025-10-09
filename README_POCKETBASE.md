@@ -15,30 +15,44 @@ Este proyecto está configurado para conectarse con PocketBase en modo local.
 
 ### empleados (Auth Collection)
 Esta debe ser una colección de autenticación con los siguientes campos:
-- `email` (email, requerido, único)
-- `password` (password, requerido)
-- `name` (text, requerido)
+- `id` (text, auto-generado, nonempty)
+- `name` (text, requerido, nonempty)
+- `password` (password, requerido, nonempty, hidden)
+- `tokenKey` (text, auto-generado, nonempty, hidden)
+- `email` (email, requerido, nonempty)
+- `emailVisibility` (bool, opcional)
+- `verified` (bool, opcional)
+- `created` (date, auto-generado)
+- `updated` (date, auto-generado)
 
-### categorias
-- `nombre` (text, requerido)
-- `icono` (text, opcional)
-- `color` (text, opcional)
+### categorias (Base Collection)
+- `id` (text, auto-generado, nonempty)
+- `nombre` (text, requerido, nonempty)
+- `created` (date, auto-generado)
+- `updated` (date, auto-generado)
 
-### inventario
-- `nombre` (text, requerido)
-- `descripcion` (text, opcional)
-- `cantidad` (number, requerido)
-- `unidad` (text, requerido)
-- `categoria` (relation → categorias, requerido)
-- `minStock` (number, opcional)
-- `imagen` (text/url, opcional)
+### inventario (Base Collection)
+- `id` (text, auto-generado, nonempty)
+- `name` (text, requerido, nonempty)
+- `description` (text, requerido, nonempty)
+- `quantity` (number, requerido)
+- `unit` (text, requerido, nonempty)
+- `categoria` (relation → categorias, single, requerido, nonempty)
+- `minStock` (number, opcional, hidden)
+- `image` (file, single, opcional, hidden)
+- `created` (date, auto-generado)
+- `updated` (date, auto-generado)
 
-### stock_history
-- `empleado` (relation → empleados, requerido)
-- `accion` (select: "entrada" | "salida", requerido)
-- `inventario` (relation → inventario, requerido)
-- `cantidad` (number, requerido)
-- `unidad` (text, requerido)
+### stock_history (Base Collection)
+- `id` (text, auto-generado, nonempty)
+- `user` (relation → empleados, single, requerido, nonempty)
+- `action` (select: "entrada" | "salida", single, requerido, nonempty, hidden)
+- `item` (relation → inventario, single, requerido, nonempty)
+- `quantityChange` (number, requerido, nonempty, hidden)
+- `unit` (text, requerido, nonempty, hidden)
+- `timestamp` (date, auto-generado con valor "Create")
+- `created` (date, auto-generado)
+- `updated` (date, auto-generado)
 
 ## Configuración de Autenticación
 
@@ -96,6 +110,52 @@ export const pb = new PocketBase('TU_URL_AQUI');
 ✅ Tipos TypeScript para todas las colecciones
 ✅ Hooks personalizados para operaciones de base de datos
 ✅ Manejo de errores y estados de carga
+
+## Ejemplos de API
+
+### Crear un item en el inventario
+```typescript
+const data = {
+  name: "Martillo",
+  description: "Martillo de acero",
+  quantity: 10,
+  unit: "unidades",
+  categoria: "CATEGORIA_ID", // ID de la categoría
+  minStock: 5,
+  image: "URL_O_FILE"
+};
+
+const record = await pb.collection('inventario').create(data);
+```
+
+### Registrar movimiento en el historial
+```typescript
+const data = {
+  user: "USER_ID",           // ID del empleado
+  item: "ITEM_ID",           // ID del item de inventario
+  action: "entrada",         // o "salida"
+  quantityChange: 5,         // cantidad del cambio
+  unit: "unidades"           // unidad de medida
+};
+
+const record = await pb.collection('stock_history').create(data);
+```
+
+### Obtener historial con relaciones expandidas
+```typescript
+const records = await pb.collection('stock_history').getFullList({
+  expand: 'item,user',
+  sort: '-created'
+});
+
+// Acceder a datos expandidos
+records.forEach(record => {
+  console.log(record.expand.user.name);      // Nombre del usuario
+  console.log(record.expand.item.name);      // Nombre del item
+  console.log(record.action);                // entrada o salida
+  console.log(record.quantityChange);        // cantidad del cambio
+});
+```
 
 ## Recursos
 

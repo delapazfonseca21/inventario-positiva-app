@@ -14,8 +14,6 @@ export const useInventario = () => {
         sort: '-created',
         expand: 'categoria',
       });
-      //ojito acá
-      console.log(records)
       setItems(records);
     } catch (error) {
       console.error('Error fetching inventario:', error);
@@ -29,10 +27,43 @@ export const useInventario = () => {
     }
   };
 
-  const createItem = async (data: Omit<Inventario, 'id' | 'created' | 'updated'>) => {
+  const createItem = async (data: Omit<Inventario, 'id' | 'created' | 'updated'>, userId?: string) => {
     try {
       const record = await pb.collection('inventario').create<Inventario>(data);
       setItems(prev => [...prev, record]);
+      
+      // Registrar en el historial si hay cantidad inicial y usuario
+      if (userId && data.quantity > 0) {
+        try {
+          // Asegurar que los tipos sean correctos
+          const historyData = {
+            user: String(userId),
+            item: String(record.id),
+            action: 'entrada',
+            quantityChange: Number(data.quantity),
+            unit: String(data.unit),
+          };
+          console.log('Attempting to create history with data:', historyData);
+          console.log('Data types:', {
+            user: typeof historyData.user,
+            item: typeof historyData.item,
+            action: typeof historyData.action,
+            quantityChange: typeof historyData.quantityChange,
+            unit: typeof historyData.unit,
+          });
+          
+          const historyRecord = await pb.collection('stock_history').create(historyData);
+          console.log('History record created successfully:', historyRecord);
+        } catch (historyError: unknown) {
+          console.error('Error creating history entry:', historyError);
+          if (historyError && typeof historyError === 'object' && 'data' in historyError) {
+            console.error('Error details:', (historyError as { data: unknown }).data);
+          }
+          console.error('History data attempted:', { userId, itemId: record.id, quantity: data.quantity, unit: data.unit });
+          // No lanzar error para no interrumpir la creación del item
+        }
+      }
+      
       toast({
         title: "Éxito",
         description: "Item creado correctamente",
@@ -49,10 +80,57 @@ export const useInventario = () => {
     }
   };
 
-  const updateItem = async (id: string, data: Partial<Inventario>) => {
+  const updateItem = async (id: string, data: Partial<Inventario>, userId?: string) => {
     try {
+      // Obtener el item actual antes de actualizar
+      const currentItem = items.find(item => item.id === id);
       const record = await pb.collection('inventario').update<Inventario>(id, data);
       setItems(prev => prev.map(item => item.id === id ? record : item));
+      
+      // Registrar en el historial si cambió la cantidad
+      if (userId && currentItem && data.quantity !== undefined && data.quantity !== currentItem.quantity) {
+        const difference = data.quantity - currentItem.quantity;
+        
+        // Validar que la diferencia no sea 0
+        if (difference === 0) {
+          console.log('Skipping history entry: quantity change is 0');
+          return record;
+        }
+        
+        const action: 'entrada' | 'salida' = difference > 0 ? 'entrada' : 'salida';
+        const quantityChange = Math.abs(difference);
+        
+        try {
+          // Asegurar que los tipos sean correctos
+          const historyData = {
+            user: String(userId),
+            item: String(id),
+            action: String(action),
+            quantityChange: Number(quantityChange),
+            unit: String(data.unit || currentItem.unit),
+          };
+          console.log('Attempting to create history with data:', historyData);
+          console.log('Data types:', {
+            user: typeof historyData.user,
+            item: typeof historyData.item,
+            action: typeof historyData.action,
+            quantityChange: typeof historyData.quantityChange,
+            unit: typeof historyData.unit,
+          });
+          console.log('Current auth state:', pb.authStore.isValid, pb.authStore.model);
+          
+          const historyRecord = await pb.collection('stock_history').create(historyData);
+          console.log('History record created successfully:', historyRecord);
+        } catch (historyError: unknown) {
+          console.error('Error creating history entry:', historyError);
+          if (historyError && typeof historyError === 'object' && 'data' in historyError) {
+            console.error('Error details:', (historyError as { data: unknown }).data);
+          }
+          console.error('History data attempted:', { userId, itemId: id, action, quantityChange, unit: data.unit || currentItem.unit });
+          // No lanzar error para no interrumpir la actualización del item
+        }
+      }
+      
       toast({
         title: "Éxito",
         description: "Item actualizado correctamente",
@@ -115,10 +193,9 @@ export const useStockHistory = () => {
       });
 
       const sortedRecords = records.sort((a, b) => {
-        // Usamos item.timestamp, que es el campo de fecha de PocketBase.
+        // Ordenar por timestamp (más reciente primero)
         const dateA = new Date(a.timestamp).getTime();
         const dateB = new Date(b.timestamp).getTime();
-        // Restar B - A ordena del más reciente al más antiguo (descendente)
         return dateB - dateA;
       });
         
@@ -154,6 +231,19 @@ export const useStockHistory = () => {
 
   useEffect(() => {
     fetchHistory();
+    
+    // Suscribirse a cambios en tiempo real
+    pb.collection('stock_history').subscribe('*', (e) => {
+      if (e.action === 'create') {
+        // Recargar el historial cuando se cree una nueva entrada
+        fetchHistory();
+      }
+    });
+    
+    // Cleanup: desuscribirse al desmontar
+    return () => {
+      pb.collection('stock_history').unsubscribe('*');
+    };
   }, []);
 
   return {

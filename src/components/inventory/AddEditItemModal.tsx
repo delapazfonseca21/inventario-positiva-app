@@ -98,6 +98,15 @@ export const AddEditItemModal = ({
       return;
     }
 
+    if (!formData.category) {
+      toast({
+        variant: "destructive",
+        title: "Categoría requerida",
+        description: "Por favor seleccione una categoría para el elemento.",
+      });
+      return;
+    }
+
     if (formData.quantity < 0) {
       toast({
         variant: "destructive",
