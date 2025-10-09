@@ -85,22 +85,15 @@ export const CategorySection = ({
             </Button>
           </div>
         ) : (
-          // CÓDIGO CORREGIDO PARA DEPURACIÓN
-        <div className="space-y-3">
-          {items.map((item) => { // 👈 Abre con llave { y usa 'return'
-            
-            // 💥 AQUÍ PUEDES COLOCAR EL CONSOLE.LOG 💥
-            console.log("Nombre para renderizar:", item.name, "ID:", item.id);
-            
-            return ( // 👈 Debes incluir 'return'
+          <div className="space-y-3">
+            {items.map((item) => (
               <InventoryItem
                 key={item.id}
                 item={item}
                 onEdit={onEditItem}
               />
-            );
-          })}  
-        </div>
+            ))}  
+          </div>
         )}
       </CardContent>
     </Card>

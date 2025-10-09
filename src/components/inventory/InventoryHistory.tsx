@@ -17,7 +17,6 @@ interface HistoryItem {
 
 export const InventoryHistory = () => {
   const { history, isLoading } = useStockHistory();
-  console.log('Datos Crudos del Historial:', history);
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleString('es-ES', {
@@ -33,10 +32,10 @@ export const InventoryHistory = () => {
   const mappedHistory: HistoryItem[] = history.map((item: StockHistoryExpanded) => ({
     id: item.id,
     user: item.expand?.user?.name || 'Usuario desconocido',
-    action: item.accion,
+    action: item.action,
     item: item.expand?.item?.name || 'Item desconocido',
-    quantity: item.cantidad,
-    unit: item.unidad,
+    quantity: item.quantityChange,
+    unit: item.unit,
     timestamp: item.timestamp,
   }));
 

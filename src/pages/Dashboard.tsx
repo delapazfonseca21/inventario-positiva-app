@@ -7,6 +7,8 @@ import { AddEditItemModal } from "@/components/inventory/AddEditItemModal";
 import { InventoryItemData } from "@/components/inventory/InventoryItem";
 import { Package, Wrench, Palette, Hammer } from "lucide-react";
 import { useInventario } from "@/hooks/usePocketBase";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const CATEGORY_MAP = {
   '0tunjeqdefikify': 'herramientas',
@@ -25,12 +27,16 @@ type CategoryMapValues = typeof CATEGORY_MAP[CategoryMapKeys];
 
 export default function Dashboard() {
   const { items, isLoading, createItem, updateItem } = useInventario();
+  const { toast } = useToast();
+  const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItemData | undefined>();
   const [defaultCategory, setDefaultCategory] = useState<string>('');
 
   const handleAddItem = (category: string) => {
-    setDefaultCategory(category);
+    // Convertir el ID de categoría al nombre
+    const categoryName = CATEGORY_MAP[category as CategoryMapKeys];
+    setDefaultCategory(categoryName || 'herramientas');
     setEditingItem(undefined);
     setIsModalOpen(true);
   };
@@ -46,8 +52,11 @@ export default function Dashboard() {
       const categoryId = NAME_TO_ID_MAP[itemData.category as keyof typeof NAME_TO_ID_MAP];
 
       if (!categoryId) {
-        console.error("Invalid category name:", itemData.category);
-        // Aquí podrías añadir un toast de error para el usuario
+        toast({
+          variant: "destructive",
+          title: "Error de categoría",
+          description: "La categoría seleccionada no es válida. Por favor intente nuevamente.",
+        });
         return;
       }
 
@@ -63,10 +72,10 @@ export default function Dashboard() {
 
       if (editingItem) {
         // Actualizar item existente
-        await updateItem(editingItem.id, dataToSend);
+        await updateItem(editingItem.id, dataToSend, user?.id);
       } else {
         // Crear nuevo item
-        await createItem(dataToSend);
+        await createItem(dataToSend, user?.id);
       }
       setIsModalOpen(false);
     } catch (error) {
