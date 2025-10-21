@@ -13,6 +13,7 @@ export const useInventario = () => {
       const records = await pb.collection('inventario').getFullList<Inventario>({
         sort: '-created',
         expand: 'categoria',
+        filter: 'deleted = false || deleted = null',
       });
       setItems(records);
     } catch (error) {
@@ -29,7 +30,10 @@ export const useInventario = () => {
 
   const createItem = async (data: Omit<Inventario, 'id' | 'created' | 'updated'>, userId?: string) => {
     try {
-      const record = await pb.collection('inventario').create<Inventario>(data);
+      const record = await pb.collection('inventario').create<Inventario>({
+        ...data,
+        deleted: false,
+      });
       setItems(prev => [...prev, record]);
       
       // Registrar en el historial si hay cantidad inicial y usuario
@@ -147,9 +151,42 @@ export const useInventario = () => {
     }
   };
 
-  const deleteItem = async (id: string) => {
+  const deleteItem = async (id: string, userId?: string) => {
     try {
-      await pb.collection('inventario').delete(id);
+      // Obtener el item antes de marcarlo como eliminado
+      const currentItem = items.find(item => item.id === id);
+      
+      // Marcar el item como eliminado (soft delete)
+      const record = await pb.collection('inventario').update<Inventario>(id, {
+        deleted: true,
+      });
+      
+      // Registrar la eliminación en el historial si hay usuario
+      if (userId && currentItem) {
+        try {
+          const historyData = {
+            user: String(userId),
+            item: String(id),
+            action: 'eliminacion',
+            quantityChange: Number(currentItem.quantity),
+            unit: String(currentItem.unit),
+          };
+          
+          console.log('Intentando crear registro de eliminación:', historyData);
+          const historyRecord = await pb.collection('stock_history').create(historyData);
+          console.log('Eliminación registrada en historial:', historyRecord);
+        } catch (historyError) {
+          console.error('Error creating history entry for deletion:', historyError);
+          if (historyError && typeof historyError === 'object' && 'data' in historyError) {
+            console.error('Error details:', (historyError as { data: unknown }).data);
+          }
+          // No lanzar error para no interrumpir la eliminación
+        }
+      } else {
+        console.warn('No se registró en historial - userId:', userId, 'currentItem:', currentItem);
+      }
+      
+      // Remover del estado local
       setItems(prev => prev.filter(item => item.id !== id));
       toast({
         title: "Éxito",

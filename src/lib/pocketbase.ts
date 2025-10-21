@@ -32,6 +32,7 @@ export interface Inventario {
   categoria: string; // ID de la categoría
   minStock?: number;
   imagen?: string;
+  deleted?: boolean;
   created: string;
   updated: string;
 }
@@ -40,7 +41,7 @@ export interface StockHistory {
   id: string;
   user: string;       
   item: string;
-  action: 'entrada' | 'salida';
+  action: 'entrada' | 'salida' | 'eliminacion';
   quantityChange: number;
   unit: string;
   timestamp: string;  

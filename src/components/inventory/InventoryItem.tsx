@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Package, AlertTriangle } from "lucide-react";
+import { Edit, Package, AlertTriangle, Trash2 } from "lucide-react";
 
 export interface InventoryItemData {
   id: string;
@@ -18,9 +18,10 @@ export interface InventoryItemData {
 interface InventoryItemProps {
   item: InventoryItemData;
   onEdit: (item: InventoryItemData) => void;
+  onDelete: (item: InventoryItemData) => void;
 }
 
-export const InventoryItem = ({ item, onEdit }: InventoryItemProps) => {
+export const InventoryItem = ({ item, onEdit, onDelete }: InventoryItemProps) => {
   const [imageError, setImageError] = useState(false);
   
   const getCategoryColor = () => {
@@ -68,14 +69,27 @@ export const InventoryItem = ({ item, onEdit }: InventoryItemProps) => {
                 </p>
               </div>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onEdit(item)}
-                className="ml-2 p-1 h-auto"
-              >
-                <Edit className="h-3 w-3" />
-              </Button>
+              <div className="flex items-center space-x-1 ml-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(item)}
+                  className="p-1 h-auto hover:bg-destructive/10 hover:text-destructive"
+                  aria-label="Eliminar elemento"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEdit(item)}
+                  className="p-1 h-auto"
+                  aria-label="Editar elemento"
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between">

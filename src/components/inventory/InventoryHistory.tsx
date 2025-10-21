@@ -1,14 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TrendingUp, TrendingDown, Clock, User } from "lucide-react";
+import { TrendingUp, TrendingDown, Clock, User, Trash2 } from "lucide-react";
 import { useStockHistory } from "@/hooks/usePocketBase";
 import { StockHistoryExpanded } from "../../lib/pocketbase"
 
 interface HistoryItem {
   id: string;
   user: string;
-  action: 'entrada' | 'salida';
+  action: 'entrada' | 'salida' | 'eliminacion';
   item: string;
   quantity: number;
   unit: string;
@@ -68,11 +68,15 @@ export const InventoryHistory = () => {
                   <div className={`p-2 rounded-full ${
                     item.action === 'entrada' 
                       ? 'bg-success/10 text-success' 
-                      : 'bg-warning/10 text-warning'
+                      : item.action === 'salida'
+                      ? 'bg-warning/10 text-warning'
+                      : 'bg-destructive/10 text-destructive'
                   }`}>
                     {item.action === 'entrada' 
                       ? <TrendingUp className="h-4 w-4" />
-                      : <TrendingDown className="h-4 w-4" />
+                      : item.action === 'salida'
+                      ? <TrendingDown className="h-4 w-4" />
+                      : <Trash2 className="h-4 w-4" />
                     }
                   </div>
                   
@@ -90,15 +94,18 @@ export const InventoryHistory = () => {
                 <div className="text-right">
                   <Badge 
                     variant={item.action === 'entrada' ? 'default' : 'secondary'}
-                    className={item.action === 'entrada' 
-                      ? 'bg-success text-success-foreground' 
-                      : 'bg-warning text-warning-foreground'
+                    className={
+                      item.action === 'entrada' 
+                        ? 'bg-success text-success-foreground' 
+                        : item.action === 'salida'
+                        ? 'bg-warning text-warning-foreground'
+                        : 'bg-destructive text-destructive-foreground'
                     }
                   >
-                    {item.action === 'entrada' ? '+' : '-'}{item.quantity} {item.unit}
+                    {item.action === 'entrada' ? '+' : item.action === 'salida' ? '-' : ''}{item.quantity} {item.unit}
                   </Badge>
                   <p className="text-xs text-muted-foreground mt-1 capitalize">
-                    {item.action}
+                    {item.action === 'eliminacion' ? 'Eliminado' : item.action}
                   </p>
                 </div>
               </div>
