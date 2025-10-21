@@ -4,6 +4,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { InventoryHistory } from "@/components/inventory/InventoryHistory";
 import { CategorySection } from "@/components/inventory/CategorySection";
 import { AddEditItemModal } from "@/components/inventory/AddEditItemModal";
+import { DeleteConfirmDialog } from "@/components/inventory/DeleteConfirmDialog";
 import { InventoryItemData } from "@/components/inventory/InventoryItem";
 import { Package, Wrench, Palette, Hammer } from "lucide-react";
 import { useInventario } from "@/hooks/usePocketBase";
@@ -26,12 +27,15 @@ type CategoryMapKeys = keyof typeof CATEGORY_MAP;
 type CategoryMapValues = typeof CATEGORY_MAP[CategoryMapKeys];
 
 export default function Dashboard() {
-  const { items, isLoading, createItem, updateItem } = useInventario();
+  const { items, isLoading, createItem, updateItem, deleteItem } = useInventario();
   const { toast } = useToast();
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItemData | undefined>();
   const [defaultCategory, setDefaultCategory] = useState<string>('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<InventoryItemData | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleAddItem = (category: string) => {
     // Convertir el ID de categoría al nombre
@@ -80,6 +84,26 @@ export default function Dashboard() {
       setIsModalOpen(false);
     } catch (error) {
       console.error('Error saving item:', error);
+    }
+  };
+
+  const handleDeleteItem = (item: InventoryItemData) => {
+    setItemToDelete(item);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteItem(itemToDelete.id, user?.id);
+      setIsDeleteDialogOpen(false);
+      setItemToDelete(null);
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -178,6 +202,7 @@ export default function Dashboard() {
               items={getItemsByCategory('herramientas')}
               onAddItem={handleAddItem}
               onEditItem={handleEditItem}
+              onDeleteItem={handleDeleteItem}
             />
             
             <CategorySection
@@ -185,6 +210,7 @@ export default function Dashboard() {
               items={getItemsByCategory('pinturas')}
               onAddItem={handleAddItem}
               onEditItem={handleEditItem}
+              onDeleteItem={handleDeleteItem}
             />
             
             <CategorySection
@@ -192,6 +218,7 @@ export default function Dashboard() {
               items={getItemsByCategory('materiales')}
               onAddItem={handleAddItem}
               onEditItem={handleEditItem}
+              onDeleteItem={handleDeleteItem}
             />
           </div>
         </div>
@@ -204,6 +231,18 @@ export default function Dashboard() {
         onSave={handleSaveItem}
         item={editingItem}
         defaultCategory={defaultCategory}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        itemName={itemToDelete?.name || ''}
+        isDeleting={isDeleting}
       />
     </div>
   );

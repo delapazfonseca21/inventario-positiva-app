@@ -9,13 +9,15 @@ interface CategorySectionProps {
   items: InventoryItemData[];
   onAddItem: (category: string) => void;
   onEditItem: (item: InventoryItemData) => void;
+  onDeleteItem: (item: InventoryItemData) => void;
 }
 
 export const CategorySection = ({ 
   category, 
   items, 
   onAddItem, 
-  onEditItem 
+  onEditItem,
+  onDeleteItem 
 }: CategorySectionProps) => {
   const getCategoryInfo = () => {
     switch (category) {
@@ -91,6 +93,7 @@ export const CategorySection = ({
                 key={item.id}
                 item={item}
                 onEdit={onEditItem}
+                onDelete={onDeleteItem}
               />
             ))}  
           </div>
