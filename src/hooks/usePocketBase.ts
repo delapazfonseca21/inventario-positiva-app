@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { pb, Inventario, StockHistory } from '@/lib/pocketbase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -7,7 +7,7 @@ export const useInventario = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     try {
       setIsLoading(true);
       const records = await pb.collection('inventario').getFullList<Inventario>({
@@ -26,7 +26,7 @@ export const useInventario = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   const createItem = async (data: Omit<Inventario, 'id' | 'created' | 'updated'>, userId?: string) => {
     try {
@@ -205,7 +205,7 @@ export const useInventario = () => {
 
   useEffect(() => {
     fetchItems();
-  }, []);
+  }, [fetchItems]);
 
   return {
     items,
@@ -222,7 +222,7 @@ export const useStockHistory = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       setIsLoading(true);
       const records = await pb.collection('stock_history').getFullList<StockHistory>({
@@ -248,7 +248,7 @@ export const useStockHistory = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   const createHistoryEntry = async (data: Omit<StockHistory, 'id' | 'created' | 'updated'>) => {
     try {
@@ -281,7 +281,7 @@ export const useStockHistory = () => {
     return () => {
       pb.collection('stock_history').unsubscribe('*');
     };
-  }, []);
+  }, [fetchHistory]);
 
   return {
     history,
